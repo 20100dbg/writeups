@@ -1,0 +1,25 @@
+from pwn import *
+from Crypto.Util.strxor import strxor
+
+p = process('/challenge/dispatcher')
+plain = b"sleep"
+
+cipher = p.readline().decode()
+cipher = cipher.split(':')[1].strip()
+cipher = bytes.fromhex(cipher)
+p.close()
+
+key = strxor(cipher, plain)
+print(f"Found key : {key.hex()}")
+
+plain = b"flag!"
+cipher = strxor(plain, key)
+
+
+p = process('/challenge/worker')
+
+cmd = f"TASK: {cipher.hex()}\n"
+p.writeline(cmd.encode())
+
+for i in range(5):
+    print(p.readline().decode())

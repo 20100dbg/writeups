@@ -1,0 +1,29 @@
+from pwn import *
+
+p = process('/challenge/run')
+p.readline()
+
+while True:
+    
+    key = p.readline().decode()
+    key = key.split(':')[1].strip()
+    key = int(key, 16)
+
+    cipher = p.readline().decode()
+    cipher = cipher.split(':')[1].strip()
+    cipher = int(cipher, 16)
+
+    plain = key ^ cipher
+
+    p.writeline(str(hex(plain)).encode())
+
+    p.readline()
+    p.readline()
+    x = p.readline().decode()
+
+    if "flag" in x:
+        break
+
+flag = p.readline().decode()
+print(flag)
+

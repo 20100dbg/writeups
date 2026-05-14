@@ -1,0 +1,33 @@
+from pwn import *
+from Crypto.Util.strxor import strxor
+
+p = process('/challenge/run')
+x = p.readline()
+
+while True:
+
+    x = p.readline().decode()
+    if "flag" in x:
+        break
+
+    key = p.readline().decode()
+    key = key.split(':')[1].strip().encode()
+
+    cipher = p.readline().decode()
+    cipher = cipher.split(':')[1].strip().encode()
+
+    plain = strxor(cipher, key)
+
+    print(f"key : {key} / cipher : {cipher} = {plain}")
+
+    plain += b"\n"
+    p.write(plain)
+
+    x = p.readline().decode()
+    print(x)
+
+
+    
+flag = p.readline().decode()
+print(flag)
+

@@ -1,0 +1,48 @@
+from pwn import *
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad,unpad
+import string
+
+def chose_plaintext(p, plain):
+    p.read()
+    p.write("1\n".encode())
+    p.write(plain.encode() + b"\n")
+
+    ret = p.readline()
+    ret = ret[14:].decode().strip()
+    return ret
+
+def encrypt_flag(p, idx, length):
+    p.read()
+    p.write("2\n".encode())
+
+    p.write(f"{idx}\n".encode())
+    p.write(f"{length}\n".encode())
+
+    ret = p.readline()
+    ret = ret[22:].decode().strip()
+    return ret
+
+def find_key(dic, value):
+   for key in dic:
+       if dic[key] == value:
+           return key
+   return None
+
+p = process('/challenge/run')
+charset = string.ascii_letters + string.digits + string.punctuation
+dic = {}
+
+for c in charset:
+    ret = chose_plaintext(p, c)
+    dic[c] = ret
+
+idx = 0
+
+while idx < 57:
+    ret = encrypt_flag(p, idx, 1)
+    letter = find_key(dic, ret)
+    print(letter, end="")
+    idx += 1
+
+print()

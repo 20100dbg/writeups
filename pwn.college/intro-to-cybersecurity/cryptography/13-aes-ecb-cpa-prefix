@@ -1,0 +1,111 @@
+from pwn import *
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad,unpad
+import string
+
+
+def chose_plaintext(p, plain):
+    p.read()
+    p.writeline("1".encode())
+    p.writeline(plain.encode())
+
+    ret = p.readline()
+    ret = ret[14:].decode().strip()
+
+    read_to_end(p)
+    return ret
+
+
+def prepend_flag(p, plain):
+    p.read()
+    p.writeline("2".encode())
+    p.writeline(plain.encode())
+
+    ret = p.readline()
+    ret = ret[14:].decode().strip()
+
+    read_to_end(p)
+    return ret
+
+
+def read_to_end(p, display=False):
+
+    while True:
+        x = p.readline()
+        if x == b"2. Prepend something to the flag.\n":
+            break
+
+
+def build_dic(p, filler):
+    dic = {}
+    
+    for c in charset:
+        tmp = filler + c
+        cipher = chose_plaintext(p, tmp)
+        dic[cipher] = filler + c
+
+    return dic
+
+
+
+p = process('/challenge/run')
+charset = string.ascii_letters + string.digits + string.punctuation
+
+found = ""
+
+# Get block size
+block_size = 0
+flag_size = 0
+
+for i in range(2,129):
+
+    ret = prepend_flag(p, "a" * i)
+    tmp_size = len(bytes.fromhex(ret))
+
+    if tmp_size != block_size:
+        if block_size == 0:
+            block_size = tmp_size
+        else:
+            block_size = tmp_size - block_size
+            flag_size = tmp_size - block_size - i
+            break
+
+prefix_size = flag_size
+
+while True:
+    if prefix_size % block_size == 0:
+        break
+    prefix_size += 1
+
+"""
+print(f"block size = {block_size}")
+print(f"flag size = {flag_size}")
+print(f"prefix size = {prefix_size}")
+"""
+
+
+idx_last_block = 3 * block_size
+found = ""
+
+for i in range(prefix_size - 1, 6, -1):
+
+    prefix = "a" * i
+    filler = found[-block_size+1:].rjust(block_size-1, 'a')
+    dic = build_dic(p, filler)
+
+    ciphertext = prepend_flag(p, prefix)
+    ciphertext = bytes.fromhex(ciphertext)
+
+    block = ciphertext[idx_last_block:idx_last_block + block_size].hex()
+
+    key = dic[block]
+
+    if key:
+        found += key[block_size-1:]
+        print(f"\r{found}", end="")
+    else:
+        print("didn't found block !")
+        exit()
+
+print()
+

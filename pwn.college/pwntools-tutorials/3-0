@@ -1,0 +1,76 @@
+from pwn import *
+
+context(arch="amd64", os="linux", log_level="info")
+
+def create(p, idx, txt):
+    p.sendline(b"1")
+    x = p.readline()
+    #print(x)
+
+    p.sendline(str(idx).encode())
+    x = p.readline()
+    #print(x)
+
+    p.send(txt.encode())
+   
+    x = p.readuntil(b"Choice >> \n")
+    #print(x)
+    
+
+def show(p, idx):
+    p.sendline(b"4")
+
+    x = p.readline()
+    p.sendline(str(idx).encode())
+
+    content = p.readline().decode().strip("\n")
+    status = p.readline().decode().strip()
+
+    print(f"{idx} - {content}{status}")
+    
+    x = p.readuntil(b"Choice >> \n")
+    #print(x)
+
+
+def edit(p, idx):
+    p.sendline(b"2")
+
+    x = p.readline()
+    p.sendline(str(idx).encode())
+    
+    x = p.readuntil(b"Choice >> \n")
+    #print(x)
+
+
+def ask_gift(p):
+    p.sendline(b"5")
+
+    while True:
+        try:
+            line = p.recvline()
+            success(line.decode())
+        except EOFError:
+            break
+
+
+
+p = process("/challenge/pwntools-tutorials-level3.0")
+x = p.readuntil(b"Choice >> \n")
+#print(x)
+
+
+create(p, 0, "hello ")
+show(p, 0)
+
+create(p, 1, "world,")
+edit(p, 1)
+show(p, 1)
+
+create(p, 3, "magic ")
+show(p, 3)
+
+create(p, 5, "notebook")
+edit(p, 5)
+show(p, 5)
+
+ask_gift(p)

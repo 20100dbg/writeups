@@ -1,0 +1,46 @@
+import socket
+import threading
+import time
+
+
+HOST = "10.0.0.2"  # The server's hostname or IP address
+PORT = 31337       # The port used by the server
+
+size = 2000
+states = [''] * size
+
+def start_client(idx):
+
+    while True:
+
+        try:
+            with socket.create_connection((HOST, PORT), timeout=3) as client_socket:
+                states[idx] = 'open'
+                time.sleep(2)
+            states[idx] = 'close'
+
+        except (TimeoutError, socket.timeout) as e:
+            states[idx] = 'timeout'
+
+        except:
+            states[idx] = 'error'
+
+
+start = time.time()
+
+for i in range(size):
+    print(f"\rOpened {i+1} sockets", end="") 
+    t = threading.Thread(target=start_client,args=[i])
+    t.start()
+
+print("\nDone creating threads")
+
+while True:
+    nb_open = len([s for s in states if s == 'open'])
+    nb_timeout = len([s for s in states if s == 'timeout'])
+    nb_close = len([s for s in states if s == 'close'])
+    nb_error = len([s for s in states if s == 'error'])
+
+    print(f"\r{time.time() - start} - open : {nb_open} / timeout : {nb_timeout} / error : {nb_error} / close : {nb_close}", end="")
+    time.sleep(0.2)
+

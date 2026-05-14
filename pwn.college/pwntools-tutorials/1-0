@@ -1,0 +1,11 @@
+from pwn import *
+
+p = process("/challenge/pwntools-tutorials-level1.0")
+p.readuntil(b":)\n###\n")
+
+payload = p32(0xdeadbeef)
+
+p.writeline(payload)
+
+flag = p.readline().decode()
+print(flag)

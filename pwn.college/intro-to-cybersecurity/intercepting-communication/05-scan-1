@@ -1,0 +1,4 @@
+#bash hardcore way
+for i in $(seq 256); do ping -c 1 -q "10.0.0.$i" | grep -B 1 "1 received"; done
+
+#other way ?

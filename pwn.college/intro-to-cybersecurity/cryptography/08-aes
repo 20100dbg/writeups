@@ -1,0 +1,22 @@
+from pwn import *
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad,unpad
+
+p = process('/challenge/run')
+
+
+key = p.readline()[15:].decode().strip()
+key = bytes.fromhex(key)
+
+flag = p.readline()[23:].decode().strip()
+flag = bytes.fromhex(flag)
+
+print(f"key : {key.hex()}")
+print(f"flag : {flag.hex()}")
+
+
+cipher = AES.new(key, AES.MODE_ECB)
+plaintext = cipher.decrypt(flag)
+plaintext = unpad(plaintext, 16)
+
+print(f"flag : {plaintext.decode()}")

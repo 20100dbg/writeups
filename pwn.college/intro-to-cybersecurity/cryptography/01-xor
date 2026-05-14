@@ -1,0 +1,22 @@
+from pwn import *
+
+p = process('/challenge/run')
+
+key = p.readline().decode()
+key = key.split(':')[1].strip()
+key = int(key)
+
+cipher = p.readline().decode()
+cipher = cipher.split(':')[1].strip()
+cipher = int(cipher)
+
+print(f"key : {key} / cipher : {cipher}")
+
+plain = key ^ cipher
+print(f"plain : {plain}")
+
+p.writeline(str(plain).encode())
+
+p.readline()
+flag = p.readline().decode()
+print(flag)

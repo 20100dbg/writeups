@@ -1,0 +1,5 @@
+tcpdump -X tcp and dst 10.0.0.2 and port 31337 > log.txt
+
+# wait a bit... a lot...
+
+grep 0x0030 log.txt | rev | cut -c 1 | rev | tr -d '\n'

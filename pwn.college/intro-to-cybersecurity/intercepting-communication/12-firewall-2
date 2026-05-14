@@ -1,0 +1,1 @@
+iptables -I INPUT -s 10.0.0.3 -p tcp --dport 31337 -j DROP

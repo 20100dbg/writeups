@@ -1,0 +1,11 @@
+from pwn import *
+
+p = process("/challenge/pwntools-tutorials-level1.1")
+p.readuntil(b":)\n###\n")
+
+payload = b"p" + p8(0x15) + p32(123456789) + b"Bypass Me:)"
+
+p.writeline(payload)
+
+flag = p.readline().decode()
+print(flag)

@@ -1,0 +1,1 @@
+echo "Hello, World!" | nc -u 10.0.0.2 31337

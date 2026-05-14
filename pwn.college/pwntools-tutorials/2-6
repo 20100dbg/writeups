@@ -1,0 +1,29 @@
+from pwn import *
+
+context(arch="amd64", os="linux", log_level="info")
+
+p = process("/challenge/pwntools-tutorials-level2.6")
+
+#        * rax = the sum from 1 to rcx 
+
+payload = asm("""
+mov rax, 0
+mov rbx, 1
+loop:
+add rax, rbx
+add rbx, 1
+cmp rbx, rcx
+jle loop
+""")
+
+p.readuntil(b"Please give me your assembly")
+p.readline()
+
+p.send(payload)
+
+while True:
+    try:
+        line = p.recvline()
+        success(line.decode())
+    except EOFError:
+        break

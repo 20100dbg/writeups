@@ -1,0 +1,24 @@
+from pwn import *
+
+context(arch="amd64", os="linux", log_level="info")
+
+p = process("/challenge/pwntools-tutorials-level2.3")
+
+# * copy 8-bytes memory starting at 0x404000 to 8-bytes memory starting at 0x405000
+
+payload = asm("""
+mov rax, qword ptr [0x404000]
+mov qword ptr [0x405000],rax
+""")
+
+p.readuntil(b"Please give me your assembly")
+p.readline()
+
+p.send(payload)
+
+while True:
+    try:
+        line = p.recvline()
+        success(line.decode())
+    except EOFError:
+        break

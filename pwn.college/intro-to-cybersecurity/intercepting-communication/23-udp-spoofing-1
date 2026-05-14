@@ -1,0 +1,6 @@
+from scapy.all import *
+
+data = b"FLAG"
+
+ans = srp(Ether() / IP(src="10.0.0.3", dst="10.0.0.2") / UDP(sport=31337, dport=31338) / data)
+print(ans)

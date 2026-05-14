@@ -1,0 +1,5 @@
+
+c = "S"
+n = "0x6b"
+
+chr(ord(c) ^ int(n, 16))

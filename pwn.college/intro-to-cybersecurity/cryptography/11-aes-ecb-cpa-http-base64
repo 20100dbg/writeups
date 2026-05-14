@@ -1,0 +1,55 @@
+from urllib.parse import quote
+import requests
+import string
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad,unpad
+import base64
+
+
+def query(url, data):
+    res = requests.get(url + "?query=" + quote(data))
+    return res.text
+
+
+def parse_result(txt):
+    idx = txt.find('<b>Query:</b> <pre>') + 19
+    idx2 = txt.find('</pre>', idx)
+    plain = txt[idx:idx2]
+
+    idx = txt.find('<b>Results:</b><pre>') + 20
+    idx2 = txt.find('</pre>', idx)
+    cipher = base64.b64decode(txt[idx:idx2])
+    
+    return plain, cipher
+
+def find_key(dic, value):
+   for key in dic:
+       if dic[key] == value:
+           return key
+   return None
+
+
+url = "http://challenge.localhost/"
+charset = string.ascii_letters + string.digits + string.punctuation
+dic = {}
+
+idx = 0
+
+for c in charset:
+    if c == "'":
+        res = query(url, f'"{c}"')
+    else:
+        res = query(url, f"'{c}'")
+    plain, cipher = parse_result(res)
+    dic[c] = cipher
+
+
+for i in range(1, 60):
+    res = query(url, f"substr(flag,{i},1)")
+    plain, cipher = parse_result(res)
+
+    letter = find_key(dic, cipher)
+    print(letter, end="")
+
+
+print()

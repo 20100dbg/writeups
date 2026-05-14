@@ -1,0 +1,18 @@
+
+
+def xor(txt, key):
+    result = bytearray()
+
+    for i in range(len(txt)):
+        x = txt[i] ^ key[i % len(key)]
+        result.append(x)
+
+    return bytes(result)
+
+
+txt = bytes.fromhex("1c0111001f010100061a024b53535009181c")
+key = bytes.fromhex("686974207468652062756c6c277320657965")
+result = xor(txt, key)
+
+print(f"Raw result : {result}")
+print(f"Hex : {result.hex()}")

@@ -1,0 +1,10 @@
+from scapy.all import *
+
+seq = 31337
+ans = srp(Ether() / IP(src="10.0.0.1", dst="10.0.0.2") / TCP(sport=31337, dport=31337, seq=seq, flags="S"))
+
+seq = seq + 1
+ack = ans[0][0][1].seq + 1
+
+ans = srp(Ether() / IP(src="10.0.0.1", dst="10.0.0.2") / TCP(sport=31337, dport=31337, ack=ack, seq=seq, flags="A"))
+print(ans)

@@ -1,0 +1,34 @@
+.intel_syntax noprefix
+.globl _start
+
+.section .text
+
+_start:
+
+
+    #socket
+    mov rdi, 2     # AF_INET
+    mov rsi, 1     # SOCK_STREAM
+    mov rdx, 0
+    mov rax, 41
+    syscall
+
+    #bind
+    mov rdi, 3                # fd
+    lea rsi, [rip+sockaddr]   # sockaddr
+    mov rdx, 16               # addrlen
+    mov rax, 49
+    syscall
+
+    #exit
+    mov rdi, 0
+    mov rax, 60
+    syscall
+
+.section .data
+
+sockaddr:
+    .2byte 2       # AF_INET
+    .2byte 0x5000  # port
+    .4byte 0       # addr
+    .8byte 0       # padding

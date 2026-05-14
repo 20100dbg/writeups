@@ -1,0 +1,5 @@
+from scapy.all import *
+
+ans = srp(Ether() / IP(proto=0xFF, src="10.0.0.1", dst="10.0.0.2"))
+print(ans)
+
