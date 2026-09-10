@@ -1,4 +1,7 @@
+import base64
 import random
+import string
+from Crypto.Cipher import AES
 
 print("""
 ____________________________
@@ -45,9 +48,35 @@ Using only the user input to profile_for() (as an oracle to generate "valid" cip
 ____________________________
 """)
 
+def xor(x, y):
+    result = bytearray()
+    for idx in range(min(len(x), len(y))):
+        result.append(x[idx] ^ y[idx])
+    return result
+
+def pad(plaintext, block_len=16):
+    pad_len = block_len - (len(plaintext) % block_len)
+    pad_char = int.to_bytes(pad_len)
+    return plaintext + pad_char * pad_len
+
+def unpad(ciphertext, block_len=16):
+    pad = ciphertext[-1]
+    return ciphertext[:-pad]
+
+def ecb_encrypt(key, plaintext):
+    cipher = AES.new(key, AES.MODE_ECB)
+    return cipher.encrypt(plaintext)
+
+def ecb_decrypt(key, ciphertext):
+    cipher = AES.new(key, AES.MODE_ECB)
+    return cipher.decrypt(ciphertext)
+
+def encryption_oracle(key, plaintext):
+    plaintext = pad(plaintext)
+    ciphertext = ecb_encrypt(key, plaintext)
+    return ciphertext
 
 def params_to_dict(params):
-
     final_dict = {}
     arr = params.split("&")
 
@@ -58,15 +87,81 @@ def params_to_dict(params):
     return final_dict
 
 def profile_for(email):
-    uid = random.randint(1,100)
+    uid = 45
     role = "user"
-    email = email.replace("&","").replace("=","")
+    #email = email.replace("&","").replace("=","")
     return f"email={email}&uid={uid}&role={role}"
+
+def split(data, as_hex=False, size=16):
+
+    blocks = [data[idx:idx+size] for idx in range(0, len(data), size)]
+
+    if as_hex:
+        blocks = [block.hex() for block in blocks]
+
+    return blocks
+
+"""
+obj_parse = params_to_dict("foo=bar&baz=qux&zap=zazzle")
+print(f"obj_parse {obj_parse}")
+"""
+
+profile = profile_for("foo@bar.com")
+#print(f"profile    : {profile}")
+
+block_len = 16
+key = random.randbytes(16)
+
+#find pad_first_block
+
+last_ciphertext = None
+for l in range(1,40):
+
+    payload = "A" * l
+    profile = profile_for(payload).encode()
+    ciphertext = encryption_oracle(key, profile)
+
+    if last_ciphertext and ciphertext[0:block_len] == last_ciphertext[0:block_len]:
+        pad_first_block_len = l - 1
+        break
+
+    last_ciphertext = ciphertext
+
+print(f"Found pad_first_block_len {pad_first_block_len}")
+
+pad_first_block = "A" * pad_first_block_len
+
+
+payload = "foo@bar.com"
+profile = profile_for(payload).encode()
+real_ciphertext = encryption_oracle(key, profile)
+
+
+# craft a custom encrypted block
+
+plaintext = b"admin" + b"\x0b" * 11
+payload = pad_first_block + plaintext.decode()
+profile = profile_for(payload).encode()
+ciphertext = encryption_oracle(key, profile)
+
+block_admin = ciphertext[16:32]
+
+
+
+plaintext = b"admin@lol.com"
+payload = plaintext.decode()
+profile = profile_for(payload).encode()
+ciphertext = encryption_oracle(key, profile)
+
+ciphertext = ciphertext[0:32] + block_admin
+
+
 
 print()
 
-res = params_to_dict("foo=bar&baz=qux&zap=zazzle")
-print(res)
+print(f"ciphertext: {ciphertext.hex()}")
 
-res = profile_for("foo@bar.com")
-print(res)
+plaintext = unpad(ecb_decrypt(key, ciphertext)).decode()
+print(f"plaintext: {plaintext}")
+
+print(f"params_to_dict {params_to_dict(plaintext)}")
