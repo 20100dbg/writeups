@@ -81,7 +81,9 @@ def split_plain(data, size=6):
 
 
 print("=" * 30)
+print()
 print("Not working ! (yet)")
+print()
 print("=" * 30)
 
 key = random.randbytes(16)
