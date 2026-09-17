@@ -64,6 +64,7 @@ def ecb_decrypt(key, ciphertext):
 
 def cbc_encrypt(iv, key, plaintext, block_len=16):
 
+    plaintext = pad(plaintext)
     ciphertext = b""
 
     for idx in range(0, len(plaintext), block_len):
@@ -103,8 +104,7 @@ def encryption_oracle(iv, key, plaintext):
     suffix = b";comment2=%20like%20a%20pound%20of%20bacon"
 
     plaintext = plaintext.replace(";","").replace("=","")
-    plaintext = plaintext.encode()
-    plaintext = pad(prefix + plaintext + suffix)
+    plaintext = prefix + plaintext.encode() + suffix
 
     ciphertext = cbc_encrypt(iv, key, plaintext)
     return plaintext, ciphertext
@@ -112,11 +112,6 @@ def encryption_oracle(iv, key, plaintext):
 def decryption_oracle(iv, key, ciphertext):
     plaintext = cbc_decrypt(iv, key, ciphertext)
     return plaintext
-
-def count_repetitions(ciphertext, block_len = 16):
-    blocks = [ciphertext[idx:idx+block_len] for idx in range(0, len(ciphertext), block_len)]
-    reps_count = max([blocks.count(block) for block in blocks])
-    return reps_count
 
 def split(data, size=6):
     block_len = 16
@@ -130,22 +125,12 @@ def split_plain(data, size=6):
     return blocks[0:size]
 
 def check_if_admin(plaintext):
-    args = plaintext.split(";")
+    args = plaintext.split(b";")
 
     for a in args:
-        if a == "admin=true":
+        if a == b"admin=true":
             return True
     return False
-
-
-def shift_bit(plaintext, shift=-1):
-    shifted_plaintext = ""
-
-    for p in plaintext:
-        shifted_plaintext += chr(ord(p) + shift)
-
-    return shifted_plaintext
-
 
 def edit_byte_array(arr, idx, val):
     return arr[0:idx] + int.to_bytes(val) + arr[idx+1:]
@@ -154,25 +139,29 @@ iv = random.randbytes(16)
 key = random.randbytes(16)
 
 
-
-print("NOT WORKING ! (YET)")
-
 block_len = 16
-plaintext = ":admin<true:"
+plaintext = "AAAAAAAAAAAAAAAA:admin<true"
 
 plaintext, ciphertext = encryption_oracle(iv, key, plaintext)
-#print(f"plaintext before decryption {plaintext}")
 print(split_plain(plaintext))
 
 print(split(ciphertext))
-ciphertext = edit_byte_array(ciphertext, 16, 120)
-print(split(ciphertext))
 
+#modified = ciphertext byte ^ plaintext byte ^ target (plaintext) byte 
+
+new_byte = ciphertext[32] ^ ord(":") ^ ord(";") 
+ciphertext = edit_byte_array(ciphertext, 32, new_byte)
+
+new_byte = ciphertext[38] ^ ord("<") ^ ord("=")
+ciphertext = edit_byte_array(ciphertext, 38, new_byte)
+
+
+print(split(ciphertext))
 
 plaintext = decryption_oracle(iv, key, ciphertext)
 print(split_plain(plaintext))
-#print(f"plaintext after decryption  {plaintext}")
 
-print(f"is admin: {check_if_admin(plaintext.decode())}")
+print()
+print(f"is admin: {check_if_admin(plaintext)}")
 
 

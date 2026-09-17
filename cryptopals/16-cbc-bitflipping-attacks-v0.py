@@ -80,9 +80,9 @@ def edit_byte_array(arr, idx, val):
     return arr[0:idx] + int.to_bytes(val) + arr[idx+1:]
 
 
+
 iv = b"\x00" * 16
 key = random.randbytes(16)
-
 
 plaintext = b"xxx=xxxx&admin=0&username=sometest"
 ciphertext = cbc_encrypt(iv, key, plaintext)
@@ -90,6 +90,10 @@ ciphertext = cbc_encrypt(iv, key, plaintext)
 print(split_plain(plaintext))
 print(split(ciphertext))
 
-iv = edit_byte_array(iv, len(iv)-1, 1)
+# we can set value to 1 because IV is set to 0
+payload = 1
+
+iv = edit_byte_array(iv, len(iv)-1, payload)
+
 plaintext = cbc_decrypt(iv, key, ciphertext)
 print(split_plain(plaintext))

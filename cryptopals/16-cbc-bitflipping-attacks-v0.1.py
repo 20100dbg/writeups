@@ -79,7 +79,6 @@ def split_plain(data, size=6):
 def edit_byte_array(arr, idx, val):
     return arr[0:idx] + int.to_bytes(val) + arr[idx+1:]
 
-
 iv = random.randbytes(16)
 key = random.randbytes(16)
 
@@ -89,8 +88,13 @@ ciphertext = cbc_encrypt(iv, key, plaintext)
 print(split_plain(plaintext))
 print(split(ciphertext))
 
-new_byte = ciphertext[15] ^ ord(chr(1))
+# need to know/guess the target byte plaintext
+target_plaintext = plaintext[31] # "0"
+
+new_byte = ciphertext[15] ^ target_plaintext ^ ord("1")
 
 ciphertext = edit_byte_array(ciphertext, 15, new_byte)
 plaintext = cbc_decrypt(iv, key, ciphertext)
+
+
 print(f"{split_plain(plaintext)}")
